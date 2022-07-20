@@ -1,0 +1,133 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+#define MDN 254 // maks. dlugosc napisu
+#define MN 100
+#define ZAKRES_WARTOSCI_A 128
+char **A,**B,**pom;
+
+
+int najdluzszyNapis(char **tablica, int ilosc){         // znajduje dlugosc najdluzszego napisu
+                int i,max=0;
+                for (i=1;i<=ilosc;i++)
+                        if (strlen(tablica[i])>max) max=strlen(tablica[i]);
+                return max;
+}
+
+void taSamaDlugosc(char **tablica, int ilosc, int NAJDLUZSZY){          // jesli dany string jest krotszy, niz najdluzszy
+                                                                                                        // to uzupelnia brakujace miejsca nullami
+                int i,j;
+                for (i=1; i<=ilosc; i++)
+                        for (j=0; j<=NAJDLUZSZY; j++)
+                                if (!(96 < (int)tablica[i][j] && (int)tablica[i][j] < 123)){
+					 tablica[i][j]=0 ;
+					}
+}
+
+void sortPrzezZliczanie(char **A, char **B, int ilosc, int pozycja){
+        int i,j;
+        int C[2048]; // pomocnicza tablica 'licznikow', ile razy wystepuje jaki znak w A
+
+        
+        for (i=0;i<=ZAKRES_WARTOSCI_A;i++) C[i]=0;
+        for (j=1;j<=ilosc;j++)
+                                C[A[j][pozycja]] +=1;
+        for (i=1;i<=ZAKRES_WARTOSCI_A;i++)
+                                C[i]=C[i]+C[i-1];
+        for (j=ilosc;j>0;j--){
+                B[C[A[j][pozycja]]]=A[j];
+                C[A[j][pozycja]]=C[A[j][pozycja]]-1;
+        }
+}
+
+void sortPozycyjne(char **A, char **B, int NAJDLUZSZY){         // wywoluje sortowanie przez zliczanie po kolei dla kazdej pozycji
+                int i;
+                for (i=NAJDLUZSZY; i>=0; i--){
+                        sortPrzezZliczanie(A,B,MN,i);
+                        pom=A;A=B;B=pom;                        // tablica wynikowa staje sie wejsciowa
+                }
+}
+/////////////// KOPCOWANIE 
+
+void drukuj(char **tablica, int ilosc){
+        int i=1;
+        for (i=1;i<=ilosc;i++)
+               // tablica[i]=toupper(tablica[i]);               // jako ze drukujemy naziwska, zmiana pierwszej litery na Wielka
+                printf("%s \n", tablica[i]);
+}
+
+
+
+int czytaj(char **A, int ilosc){
+ char slowo[MDN];
+	int i=0;
+	int s;
+    FILE *plik;  
+	if((plik=fopen("nazwiska.txt", "r"))==NULL){
+			printf("Nie moge otorzyc pliku!\n");
+        }
+        else{    
+    	         while (feof(plik)==0 && i<ilosc){
+                  fscanf(plik, "%d %s",&s ,slowo);
+                  i++;
+                   A[i] = (char*) malloc(sizeof(char)*MDN);
+	               strcpy(A[i],slowo);
+                   }
+        }
+        if(fclose(plik)){
+        printf("Nie moge zamknac pliku!\n");
+        }
+        printf("-----------------KONIEC CZYTANIA ------------------");
+        
+}
+
+
+void zapis(char **A,int ilosc){
+	FILE *fp1;
+	if ((fp1=fopen("test.txt", "w"))==NULL) {
+		printf ("Nie moge otworzyc pliku test.txt do zapisu!\n");
+		exit(1);
+     }
+     int i;
+     for(i=0;i<ilosc;i++){
+		fprintf (fp1, "%s\n", A[i]); /* zapisz nasz lancuch w pliku */
+		
+	}
+	fclose (fp1); /* zamknij plik */
+printf("zapis\n");
+}
+
+
+
+
+
+
+
+int main(){
+  int n=100;//ile ma czytac z pliku
+  int MAXdlugosc;
+  A=(char**) malloc(n*sizeof(char*));
+  B=(char**) malloc(n*sizeof(char*));
+  pom=(char**) malloc(n*sizeof(char*));
+
+	czytaj(A,n);
+
+	MAXdlugosc=najdluzszyNapis(A,n);
+	taSamaDlugosc(A,n,MAXdlugosc);
+	sortPozycyjne(A,B,MAXdlugosc);
+	printf("\n \n");
+
+	//kopcowanie(A,n);
+	
+	
+	zapis(A,n);
+	drukuj(A,n);
+	
+	//free(A);
+	//free(B);
+	//free(pom);
+return 0;
+   
+}
